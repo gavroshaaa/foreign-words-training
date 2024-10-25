@@ -6,8 +6,6 @@ const words = [
     { word: "велосипед", translation: "bicycle", example: "I don't know how to ride a bicycle." },
     { word: "счастье", translation: "happiness", example: "Children are happiness!" },
     { word: "зеленый", translation: "green", example: "Help me find a green shirt." },
-    { word: "лестница", translation: "staircase", example: "Carefully go down the staircase." },
-    { word: "ножницы", translation: "scissors", example: "I made a snowflake using scissors and paper." },
 ];
 
 const flipCard = document.querySelector(".flip-card");
@@ -19,6 +17,8 @@ const btnShuffleWords = document.querySelector('#shuffle-words');
 const time = document.querySelector('#time');
 const currentWord = document.querySelector('#current-word');
 const wordsProgress = document.querySelector('#words-progress');
+const examProgress = document.querySelector('#exam-progress');
+const correctPercent = document.querySelector('#correct-percent');
 
 let index = 0;
 
@@ -51,6 +51,11 @@ function showProgress() {
     makeCard(words[index]);
 }
 
+function showProgressTest() {
+    examProgress.value = correctPairs * (100 / (words.length));
+    correctPercent.textContent = `${Math.round(examProgress.value)}%`;
+}
+
 btnNext.addEventListener('click', () => {
     index = ++index;
     btnBack.disabled = false;
@@ -70,11 +75,57 @@ btnBack.addEventListener('click', () => {
     }
     showProgress();
 });
+let selectedCards = [];
+let correctPairs = 0;
+let totalPairs = words.length;
 
 function makeExamCard(elem) {
     const item = document.createElement("div");
     item.classList.add('card');
     item.textContent = elem;
+
+    item.addEventListener('click', function() {
+
+        const card = document.querySelectorAll('.card');
+        card.forEach(i => {
+            i.classList.remove('correct');
+            i.classList.remove('wrong');
+        });
+        selectedCards.push(item);
+
+        if (selectedCards.length === 1) {
+            item.classList.add('correct');
+        } else if (selectedCards.length === 2) {
+
+            const choosenWord = words.find(words => words.translation === selectedCards[0].textContent || words.word === selectedCards[0].textContent);
+            console.log(choosenWord);
+            console.log(selectedCards[1].innerHTML);
+            console.log(selectedCards[0].innerHTML);
+            console.log(choosenWord.translation);
+
+
+            if (choosenWord.translation === selectedCards[1].innerHTML || choosenWord.word === selectedCards[1].innerHTML) {
+                selectedCards.forEach((i) => {
+                    i.classList.add("fade-out");
+                    i.classList.add("correct");
+                    selectedCards = [];
+                });
+                correctPairs = correctPairs + 1;
+                if (correctPairs === totalPairs) {
+                    setTimeout(() => finishPlay("Молодец, отличная работа!"), 500);
+
+                }
+            } else {
+                selectedCards[1].classList.add("wrong");
+                setTimeout(() => {
+                    selectedCards[1].classList.remove("wrong");
+                    selectedCards.forEach((i) => i.classList.remove("active"));
+                    selectedCards = [];
+                }, 1000);
+            }
+            showProgressTest()
+        }
+    });
     return item;
 }
 
@@ -90,9 +141,51 @@ function addCard() {
     examCards.append(fragment);
 };
 
+const timer = document.querySelector("#time");
+const timeArray = timer.textContent.split(':');
+
+let minutes = +timeArray[0];
+let seconds = +timeArray[1];
+
+let timerId;
+
+let isRunning = false;
+
 btnExam.addEventListener('click', function() {
     document.querySelector('.study-cards').classList.add('hidden');
     document.querySelector('#study-mode').classList.add('hidden');
     document.querySelector('#exam-mode').classList.remove('hidden');
     addCard();
+    if (!isRunning) {
+        seconds = 0;
+        minutes = 0;
+        timerId = setInterval(() => {
+            seconds++;
+            if (seconds > 59) {
+                seconds = 0;
+                minutes++;
+            }
+            timer.textContent = `${format(minutes)}:${format(seconds)}`
+        }, 1000)
+        isRunning = true;
+    }
 });
+
+function format(val) {
+    if (val < 10) {
+        return (`0${val}`)
+    }
+    return val;
+}
+
+
+function stopTimer() {
+    isRunning = false;
+    clearInterval(timerId);
+}
+
+function finishPlay(info) {
+    clearInterval(timerId);
+    alert(`${info}     Твое время: ${timer.textContent}`);
+    isRunning = false;
+}
