@@ -22,6 +22,7 @@ const correctPercent = document.querySelector('#correct-percent');
 
 let index = 0;
 
+
 function makeCard({ word, translation, example }) {
     flipCard.querySelector("#card-front h1").textContent = word;
     flipCard.querySelector("#card-back h1").textContent = translation;
@@ -42,7 +43,7 @@ flipCard.addEventListener('click', () => {
 });
 
 btnShuffleWords.addEventListener('click', () => {
-    makeCard(words[Math.floor(Math.random() * words.length)]);
+    renderCard(words.sort(() => Math.random() - 0.5))
 });
 
 function showProgress() {
@@ -98,16 +99,19 @@ function makeExamCard(elem) {
         } else if (selectedCards.length === 2) {
 
             const choosenWord = words.find(words => words.translation === selectedCards[0].textContent || words.word === selectedCards[0].textContent);
-            console.log(choosenWord);
-            console.log(selectedCards[1].innerHTML);
-            console.log(selectedCards[0].innerHTML);
-            console.log(choosenWord.translation);
-
-
-            if (choosenWord.translation === selectedCards[1].innerHTML || choosenWord.word === selectedCards[1].innerHTML) {
+            if (selectedCards[0] === selectedCards[1]) {
                 selectedCards.forEach((i) => {
-                    i.classList.add("fade-out");
+                    i.classList.add("wrong");
+                });
+                setTimeout(() => {
+                    selectedCards[1].classList.remove("wrong");
+                    selectedCards = [];
+                }, 1000);
+            } else if (choosenWord.translation === selectedCards[1].innerHTML || choosenWord.word === selectedCards[1].innerHTML) {
+                selectedCards.forEach((i) => {
                     i.classList.add("correct");
+                    i.classList.add("fade-out");
+                    i.style.pointerEvents = "none";
                     selectedCards = [];
                 });
                 correctPairs = correctPairs + 1;
